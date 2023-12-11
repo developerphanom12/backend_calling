@@ -18,7 +18,7 @@ app.use(cors({ origin: true })); // Enable CORS
 
 
 
-const port = process.env.PORT || 3100;
+const port = process.env.PORT || 3600;
 const ipAddress = '127.0.0.1';
 
 // Serve static files
