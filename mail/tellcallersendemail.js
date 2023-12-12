@@ -17,7 +17,7 @@ function sendRegistrationEmail(email, username, password) {
             <p class="message">Your registration details are as follows:</p>
             <p class="credentials"><strong>Username:</strong> ${username}</p>
             <p class="credentials"><strong>Password:</strong> ${password}</p>
-            <p class="message">You can access your account <a href="http://localhost:3600/api/admin/login"> click here</a>.</p>
+            <p class="message">You can access your account <a href="http://localhost:3700/api/admin/telecallerlogin"> click here</a>.</p>
             <p class="message">Please use these credentials to access your account.</p>
         `,  
     };
