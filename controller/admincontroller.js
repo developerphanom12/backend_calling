@@ -2,11 +2,8 @@ const admin = require('../service/adminservice')
 const messages = require ('../messages/telecaller');
 const bcrypt = require('bcrypt')
 let saltRounds = 10;
+const accountblock = require('../mail/deleteemail')
 
-const handleServerError = (res, error) => {
-  console.error('Internal server error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-};
 
 
 
@@ -127,6 +124,49 @@ const logintellecaller = async (req, res) => {
 
 
 
+const userdelete = async (req, res) => {
+  const { userId, is_deleted } = req.body;
+
+  try {
+    if (req.user.role !== 'admin') {
+      throw {
+        status: 403,
+        error: 'Forbidden. Only admin can remove telecaller.'
+      };
+    }
+
+    if (is_deleted !== 0 && is_deleted !== 1) {
+      throw {
+        status: 400,
+        error: 'Invalid is_deleted value. It must be either 0 or 1.'
+      };
+    }
+
+    admin.deletetellecalller(is_deleted, userId, (error, result) => {
+      if (error) {
+        console.error('Error updating telecaller status:', error);
+        throw {
+          status: 500,
+          error: 'Failed to update telecaller status.'
+        };
+      }
+
+      console.log('telecaller status updated successfully');
+
+      if (is_deleted === 1) {
+        accountblock.sendaccountinfo(result.email);
+      }
+      
+      res.status(201).json({
+        status: 201,
+        message: 'telecaller delete permanently notify on email'
+      });
+    });
+  } catch (error) {
+    res.status(error.status || 500).json(error);
+  }
+};
+
 
 
 
@@ -134,5 +174,6 @@ const logintellecaller = async (req, res) => {
     registerAdmin,
     loginAdmin,
     telecallerregister,
-    logintellecaller
+    logintellecaller,
+    userdelete
   }

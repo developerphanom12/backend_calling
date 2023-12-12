@@ -20,6 +20,6 @@ router.post('/telecallereg',validatetelecaller,authenticateToken, admincontrolle
 router.post('/telecallerlogin', admincontroller.logintellecaller);
 
 
-
+router.post('/deleteuser', authenticateToken, admincontroller.userdelete)
 
 module.exports = router;
