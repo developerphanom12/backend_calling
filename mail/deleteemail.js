@@ -5,7 +5,7 @@ function sendaccountinfo(email) {
         service: 'Gmail',
         auth: {
             user: 'ashimavineet2729@gmail.com',
-            pass: 'suqo spfj ajsb fieb', 
+            pass: 'suqo spfj ajsb fieb',
         }
     })
     const mailOptions = {
@@ -15,9 +15,9 @@ function sendaccountinfo(email) {
         html: `
                      <p class="message">Unforunately Your Account Blocked</p>
             <p class="message">Please wait some time Notify after your account unblocked from admin</p>
-        `,  
+        `,
     };
-    
+
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {

@@ -174,7 +174,7 @@ const userdelete = async (req, res) => {
 
 const getdataclientwithca = async (req, res) => {
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Forbidden for regular users' });
+    return res.status(403).json({ status: 403, error: 'Forbidden for regular users' });
 }
   try {
       let clientdata;
