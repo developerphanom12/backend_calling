@@ -60,12 +60,7 @@ function loginadmin(username, password, callback) {
     if (!passwordMatch) {
       return callback(null, { error: 'Invalid password' });
     }
-    if (user.is_deleted === 1) {
-      return callback(null, { error: 'User not found' });
-  }
-  if (user.is_aprooved !== 1) {
-      return callback(null, { error: 'You are not approved at this moment' });
-  }
+  
     const secretKey = 'secretkey';
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, secretKey);
     console.log('token', token)
@@ -111,7 +106,7 @@ async function telecallerregister(telecaller) {
               username,
               passsword: hashedPassword,
               email,
-              phone_number,
+              
 
             };
 
@@ -150,7 +145,7 @@ function logintellecaller(username, passsword, callback) {
     if (user.is_deleted === 1) {
       return callback(null, { error: 'User not found' });
   }
-  if (user.is_aprooved !== 1) {
+  if (user.is_approved !== 1) {
       return callback(null, { error: 'You are not approved at this moment' });
   }
 
@@ -210,10 +205,60 @@ const deletetellecalller = (is_deleted, userId, callback) => {
 };
 
 
+
+function getalldataofclient() {
+  return new Promise((resolve, reject) => {
+      const query = `
+      SELECT DISTINCT
+          c.id,
+          c.username,
+          u.id,
+          u.tellecaller_id AS id,
+          u.client_name,
+          u.call_schedule_date,
+          u.call_status,
+          un.ca_id,
+          un.tellecaller_id AS id,
+          un.ca_name
+      FROM  tellecaler_data c
+      LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
+      LEFT JOIN client_ca_data un ON c.id = un.tellecaller_id
+    `;
+
+    db.query(query, (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+        console.error('Error getting data by ID:', error); // Log the error
+      } else {
+        if (results.length === 0) {
+          resolve(null);
+        } else {
+          const userWithAddress = {
+            user_id: results[0].id,
+            username: results[0].username,
+            client_data: {
+              client_name:results[0].client_name,
+              call_schedule_date:results[0].call_schedule_date,
+              call_status:results[0].call_status,
+            },
+            clientCA_data:{
+               client_id : results[0].ca_id,
+               ca_name : results[0].ca_name
+            }
+          };
+          resolve(userWithAddress);
+          console.log('data retrieved by ID successfully');
+        }
+      }
+    });
+  });
+};
 module.exports = {
   adminregister,
   loginadmin,
   telecallerregister,
   logintellecaller,
-  deletetellecalller
+  deletetellecalller,
+  getalldataofclient
 };

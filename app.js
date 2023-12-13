@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const cors = require('cors');
 const Admin = require('./routes/adminRoutes')
+const telecaller = require('./routes/telecallerRoutes')
 dotenv.config();
 
 app.use(express.json()); 
@@ -14,10 +15,8 @@ app.use(cors({ origin: true })); // Enable CORS
 
 
 
-
-
 app.use('/api/admin', Admin)
-
+app.use('/api/telle',telecaller)
 const port = process.env.PORT || 3700;
 const ipAddress = '127.0.0.1';
 

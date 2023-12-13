@@ -3,7 +3,6 @@ const secretKey = 'secretkey';
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
-
   if (!authHeader) {
     return res.status(401).json({ error: 'Unauthorized user, please provide a token' });
   }

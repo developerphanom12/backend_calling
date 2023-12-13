@@ -22,4 +22,8 @@ router.post('/telecallerlogin', admincontroller.logintellecaller);
 
 router.post('/deleteuser', authenticateToken, admincontroller.userdelete)
 
+
+
+router.get('/getalldataclient', authenticateToken, admincontroller.getdataclientwithca)
+
 module.exports = router;

@@ -2,7 +2,8 @@ const admin = require('../service/adminservice')
 const messages = require ('../messages/telecaller');
 const bcrypt = require('bcrypt')
 let saltRounds = 10;
-const accountblock = require('../mail/deleteemail')
+const accountblock = require('../mail/deleteemail');
+const telecaller = require('../messages/telecaller');
 
 
 
@@ -170,10 +171,44 @@ const userdelete = async (req, res) => {
 
 
 
+
+const getdataclientwithca = async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden for regular users' });
+}
+  try {
+      let clientdata;
+
+      clientdata = await admin.getalldataofclient();
+
+      if(clientdata){
+        res.status(201).json({
+            message: "data fetched successfully",
+            status: 201,
+            data: clientdata
+        });
+    } else {
+          const responseMessage = 'No data found for the provided ID telecaller id.';
+          res.status(404).json({
+              message: responseMessage,
+              status: 404
+          });
+      }
+  } catch (error) {
+      console.error('Error in getallacoursebyid:', error);
+      res.status(500).json({
+          message: 'Internal server error',
+          status: 500
+      });
+  }
+};
+
+
   module.exports = {
     registerAdmin,
     loginAdmin,
     telecallerregister,
     logintellecaller,
-    userdelete
+    userdelete,
+    getdataclientwithca
   }
