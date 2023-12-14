@@ -2,7 +2,8 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt');
 const db = require('../config/database')
 const sendemail = require('../mail/tellcallersendemail')
-
+const ExcelJS = require('exceljs');
+const path = require('path')
 
 function adminregister(adminData) {
   return new Promise((resolve, reject) => {
@@ -218,11 +219,10 @@ function getalldataofclient() {
           u.call_schedule_date,
           u.call_status,
           un.ca_id,
-          un.tellecaller_id AS id,
           un.ca_name
       FROM  tellecaler_data c
       LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
-      LEFT JOIN client_ca_data un ON c.id = un.tellecaller_id
+      LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
     `;
 
     db.query(query, (error, results) => {
@@ -254,11 +254,226 @@ function getalldataofclient() {
     });
   });
 };
+
+function getbyteleId(userId) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT DISTINCT
+          c.id,
+          c.username,
+          u.id,
+          u.tellecaller_id AS id,
+          u.client_name,
+          u.call_schedule_date,
+          u.call_status,
+          un.ca_id,
+          un.ca_name
+      FROM  tellecaler_data c
+      LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
+      LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
+      WHERE u.tellecaller_id = ?;
+    `;
+
+    db.query(query, [userId], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        if (results.length === 0) {
+          resolve(null);
+        } else {
+          // Return an array of results for the given telecaller ID
+          const userWithAddresses = results.map(result => ({
+            user_id: result.id,
+            username: result.username,
+            client_data: {
+              client_name: result.client_name,
+              call_schedule_date: result.call_schedule_date,
+              call_status: result.call_status,
+            },
+            clientCA_data: {
+              client_id: result.ca_id,
+              ca_name: result.ca_name,
+            }
+          }));
+
+          resolve(userWithAddresses);
+          console.log('Data retrieved successfully for telecaller ID:', userId);
+        }
+      }
+    });
+  });
+}
+// getalldataofclient()
+//     .then((result) => {
+//         if (result) {
+//             console.log('Data:', result);
+//         } else {
+//             console.log('No data found.');
+//         }
+//     })
+//     .catch((error) => {
+//         console.error('Error:', error);
+//     });
+
+const excelFileDirectory = path.join(__dirname, 'uploadss'); // Replace with your preferred directory path
+
+
+async function clientdatainexcelsheet(userid) {
+  try {
+    const query = `
+    SELECT DISTINCT
+      a.client_name,
+      a.company_name,
+      a.call_schedule_date,
+      a.call_status,
+      u.id AS tellecaller_id,
+      u.username,
+      c.ca_name,
+      c.ca_number,
+      c.ca_accountant_number,
+      c.ca_id
+    FROM client_data_report a
+    INNER JOIN tellecaler_data u ON a.tellecaller_id = u.id
+    LEFT JOIN client_ca_data c ON a.ca_id = c.ca_id	
+    WHERE u.id = ?
+    ;`;
+
+  const queryPromise = new Promise((resolve, reject) => {
+    db.query(query,[userid],(error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+
+  const results = await queryPromise;
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('AllApplications');
+
+    worksheet.columns = [
+      { header: 'Client Name', key: 'client_name' },
+      { header: 'Company Name', key: 'company_name' }, 
+      { header: 'Schedule Date', key: 'call_schedule_date' },
+      { header: 'Call Status', key: 'call_status' },
+      { header: 'CA Name', key: 'ca_name' },
+      { header: 'CA Phone Number', key: 'ca_number' },
+      { header: 'CA id Number', key: 'ca_id' },
+
+
+    ];
+
+    results.forEach((row) => {
+      const rowData = {
+        client_name: row.client_name,
+        company_name:row.company_name,
+        call_schedule_date: row.call_schedule_date,
+        call_status: row.call_status,
+        ca_name: row.ca_name,
+        ca_number:row.ca_number,
+        ca_id:row.ca_id
+      };
+      worksheet.addRow(rowData);
+    });
+
+    const excelFileName = `all_applications_${new Date().getTime()}.xlsx`;
+    const excelFilePath = path.join(excelFileDirectory, excelFileName);
+
+    await workbook.xlsx.writeFile(excelFilePath);
+
+    console.log(`Excel file saved as ${excelFilePath}`);
+    return excelFilePath;
+  } catch (error) {
+    console.error('Error executing or saving Excel file:', error);
+    throw error;
+  }
+}
+
+
+
+async function getexcelalldata(userRole) {
+  try {
+    const query = `
+    SELECT DISTINCT
+      a.client_name,
+      a.company_name,
+      a.call_schedule_date,
+      a.call_status,
+      u.id AS tellecaller_id,
+      u.username,
+      c.ca_name,
+      c.ca_number,
+      c.ca_accountant_number,
+      c.ca_id
+    FROM client_data_report a
+    INNER JOIN tellecaler_data u ON a.tellecaller_id = u.id
+    LEFT JOIN client_ca_data c ON a.ca_id = c.ca_id	
+    ;`;
+    const queryPromise = new Promise((resolve, reject) => {
+      db.query(query,[userRole],(error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
+    });
+  
+    const results = await queryPromise;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('AllApplications');
+  
+      worksheet.columns = [
+        { header: 'Client Name', key: 'client_name' },
+        { header: 'Company Name', key: 'company_name' }, 
+        { header: 'Schedule Date', key: 'call_schedule_date' },
+        { header: 'Call Status', key: 'call_status' },
+        { header: 'CA Name', key: 'ca_name' },
+        { header: 'CA Phone Number', key: 'ca_number' },
+        { header: 'CA id Number', key: 'ca_id' },
+  
+  
+      ];
+  
+      results.forEach((row) => {
+        const rowData = {
+          client_name: row.client_name,
+          company_name:row.company_name,
+          call_schedule_date: row.call_schedule_date,
+          call_status: row.call_status,
+          ca_name: row.ca_name,
+          ca_number:row.ca_number,
+          ca_id:row.ca_id
+        };
+        worksheet.addRow(rowData);
+      });
+  
+      const excelFileName = `all_applications_${new Date().getTime()}.xlsx`;
+      const excelFilePath = path.join(excelFileDirectory, excelFileName);
+  
+      await workbook.xlsx.writeFile(excelFilePath);
+  
+      console.log(`Excel file saved as ${excelFilePath}`);
+      return excelFilePath;
+    } catch (error) {
+      console.error('Error executing or saving Excel file:', error);
+      throw error;
+    }
+  }
+  
+  
+
+
 module.exports = {
   adminregister,
   loginadmin,
   telecallerregister,
   logintellecaller,
   deletetellecalller,
-  getalldataofclient
+  getalldataofclient,
+  getbyteleId,
+  clientdatainexcelsheet,
+  getexcelalldata
 };

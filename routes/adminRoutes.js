@@ -26,4 +26,6 @@ router.post('/deleteuser', authenticateToken, admincontroller.userdelete)
 
 router.get('/getalldataclient', authenticateToken, admincontroller.getdataclientwithca)
 
+router.get('/getexcelsheetdata', authenticateToken, admincontroller.getexcelshheetdata)
+
 module.exports = router;
