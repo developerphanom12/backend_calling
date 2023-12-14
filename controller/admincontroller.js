@@ -250,6 +250,43 @@ const getexcelshheetdata = async (req, res) => {
     res.status(500).send('Error generating or serving Excel file');
   }
 };
+const getcallstatus = async (req, res) => {
+  try {
+    const { callStatus } = req.body;
+    const validStatusValues = ['cold_lead', 'hot_lead', 'prospective_client', 'ghost_client', 'negative_client', 'close_status'];
+
+    if (!validStatusValues.includes(callStatus)) {
+      throw {
+        status: 400,
+        error: 'Invalid callStatus value. It must be one of: cold_lead, hot_lead, prospective_client, ghost_client, negative_client, close_status.'
+      };
+    }
+
+    const hotLeads = await admin.getdatawithstatus(callStatus);
+
+    if (hotLeads.length === 0) {
+      res.status(404).json({
+        message: 'No data found for this lead',
+        status: 404,
+      });
+    } else {
+      res.status(200).json({
+        message: 'Call status leads retrieved successfully',
+        status: 200,
+        data: hotLeads,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+
+    if (error.status === 400) {
+      res.status(400).json({ error: 'Bad Request: ' + error.error });
+    } else {
+      res.status(500).json({ error: 'Internal Server Error: An error occurred during hot leads retrieval.' });
+    }
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -257,5 +294,6 @@ module.exports = {
   logintellecaller,
   userdelete,
   getdataclientwithca,
-  getexcelshheetdata
+  getexcelshheetdata,
+  getcallstatus
 }
