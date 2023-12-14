@@ -1,5 +1,7 @@
+const { compareSync } = require('bcrypt');
 const telecaller = require('../service/telecallerservice')
-
+const moment = require('moment-timezone');
+const salesdata = require('../salesdatafxn/sales')
 
 
 const Clientdata = async (req, res) => {
@@ -52,8 +54,49 @@ const Clientdata = async (req, res) => {
 
 
 
+const getTotalSalesPerWeekAndMonth = async (req, res) => {
+    const telecallerId = req.params.id;
+    const userSelection = req.query.selection;
+    console.log("weeeeeheheh", userSelection);
+
+    try {
+        let salesData;
+
+        if (userSelection === 'today') {
+            const today = moment().tz('YourTimeZone').format('YYYY-MM-DD');
+            console.log('dateeee', today);
+            salesData = await telecaller.getTotalSalesPerDay(telecallerId, today);
+
+            if (salesData.length === 0) {
+                return res.status(404).json({ success: false, error: 'No sales data found for today' });
+            }
+        }
+        else {
+            salesData = await telecaller.getTotalSalesPerWeekAndMonth(telecallerId);
+        }
+
+        const organizedData = salesdata.organizeDataBySelection(salesData, userSelection);
+
+        res.status(201).json({ success: true, data: organizedData });
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+
+        if (error) {
+            res.status(404).json({ success: false, error: 'No sales data found' });
+        } else if (error) {
+            res.status(400).json({ success: false, error: error.message });
+        } else {
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
+        }
+    }
+};
+
+
+
+
+
 
 module.exports = {
     Clientdata,
-
+    getTotalSalesPerWeekAndMonth,
 }
