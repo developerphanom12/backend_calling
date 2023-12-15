@@ -1,7 +1,6 @@
 const { compareSync } = require('bcrypt');
 const telecaller = require('../service/telecallerservice')
 const moment = require('moment-timezone');
-const salesdata = require('../salesdatafxn/sales')
 
 
 const Clientdata = async (req, res) => {
@@ -52,12 +51,16 @@ const Clientdata = async (req, res) => {
     }
 };
 
-
-
 const getTotalSalesPerWeekAndMonth = async (req, res) => {
     const telecallerId = req.params.id;
     const userSelection = req.query.selection;
-    console.log("weeeeeheheh", userSelection);
+    const selectedMonth = req.query.month;
+
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden for regular users' });
+      }
+      console.log('User Role:', req.user.role);
+    
 
     try {
         let salesData;
@@ -65,25 +68,36 @@ const getTotalSalesPerWeekAndMonth = async (req, res) => {
         if (userSelection === 'today') {
             const today = moment().tz('YourTimeZone').format('YYYY-MM-DD');
             console.log('dateeee', today);
+            
             salesData = await telecaller.getTotalSalesPerDay(telecallerId, today);
 
             if (salesData.length === 0) {
-                return res.status(404).json({ success: false, error: 'No sales data found for today' });
+                return res.status(404).json({ status: 404, error: 'No sales data found for today' });
+            }
+        } 
+        else if (userSelection === 'last7days') {
+            const last7DaysData = await telecaller.getSalesDataForLastNDays(telecallerId, 7);
+            if (last7DaysData.length === 0) {
+                return res.status(404).json({ status: 404, error: 'No sales data found for the last 7 days' });
+            }
+            salesData = last7DaysData;
+        } 
+        
+        else {
+            salesData = await telecaller.getTotalSalesPerWeekAndMonth(telecallerId, selectedMonth);
+            if (salesData.length === 0) {
+                return res.status(404).json({ status: 404, error: `No sales data found for ${selectedMonth} month` });
             }
         }
-        else {
-            salesData = await telecaller.getTotalSalesPerWeekAndMonth(telecallerId);
-        }
 
-        const organizedData = salesdata.organizeDataBySelection(salesData, userSelection);
-
-        res.status(201).json({ success: true, data: organizedData });
+        res.status(201).json({
+            success: 201,
+            data: salesData
+        });
     } catch (error) {
         console.error('Error fetching sales data:', error);
 
-        if (error) {
-            res.status(404).json({ success: false, error: 'No sales data found' });
-        } else if (error) {
+        if (error instanceof CustomError) {
             res.status(400).json({ success: false, error: error.message });
         } else {
             res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -93,10 +107,63 @@ const getTotalSalesPerWeekAndMonth = async (req, res) => {
 
 
 
+const checkadminallsales = async (req, res) => {
+    const userSelection = req.query.selection;
+    const selectedMonth = req.query.month;
+    
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden for regular users' });
+      }
+      console.log('User Role:', req.user.role);
+    
+
+    try {
+        let salesData;
+
+        if (userSelection === 'today') {
+            const today = moment().tz('YourTimeZone').format('YYYY-MM-DD');
+            console.log('dateeee', today);
+            
+            salesData = await telecaller.checkadminperdaysales(today);
+
+            if (salesData.length === 0) {
+                return res.status(404).json({ status: 404, error: 'No sales data found for today' });
+            }
+        } 
+        else if (userSelection === 'last7days') {
+            const last7DaysData = await telecaller.admincheckget7dayssales(7);
+            if (last7DaysData.length === 0) {
+                return res.status(404).json({ status: 404, error: 'No sales data found for the last 7 days' });
+            }
+            salesData = last7DaysData;
+        } 
+        
+        else {
+            salesData = await telecaller.admincheckbymonthallsales(selectedMonth);
+            if (salesData.length === 0) {
+                return res.status(404).json({ status: 404, error: `No sales data found for ${selectedMonth} month` });
+            }
+        }
+
+        res.status(201).json({
+            success: 201,
+            data: salesData
+        });
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+
+        if (error instanceof CustomError) {
+            res.status(400).json({ success: false, error: error.message });
+        } else {
+            res.status(500).json({ success: false, error: 'Internal Server Error' });
+        }
+    }
+};
 
 
 
 module.exports = {
     Clientdata,
     getTotalSalesPerWeekAndMonth,
+    checkadminallsales
 }

@@ -9,5 +9,6 @@ router.post('/addclientdata',authenticateToken,upload.single('attach_file'), tel
 
  router.get('/addCAdata/:id',authenticateToken, telecallerCOntroller.getTotalSalesPerWeekAndMonth)
 
+ router.get('/admincheckaalsales',authenticateToken, telecallerCOntroller.checkadminallsales)
 
 module.exports = router;
