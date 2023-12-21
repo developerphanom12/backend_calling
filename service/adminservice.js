@@ -61,7 +61,7 @@ function loginadmin(username, password, callback) {
     if (!passwordMatch) {
       return callback(null, { error: 'Invalid password' });
     }
-  
+
     const secretKey = 'secretkey';
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, secretKey);
     console.log('token', token)
@@ -107,7 +107,7 @@ async function telecallerregister(telecaller) {
               username,
               passsword: hashedPassword,
               email,
-              
+
 
             };
 
@@ -145,10 +145,10 @@ function logintellecaller(username, passsword, callback) {
 
     if (user.is_deleted === 1) {
       return callback(null, { error: 'User not found' });
-  }
-  if (user.is_approved !== 1) {
+    }
+    if (user.is_approved !== 1) {
       return callback(null, { error: 'You are not approved at this moment' });
-  }
+    }
 
     const secretKey = 'secretkey';
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, secretKey);
@@ -206,72 +206,71 @@ const deletetellecalller = (is_deleted, userId, callback) => {
 };
 
 
-
 function getalldataofclient() {
   return new Promise((resolve, reject) => {
-      const query = `
+    const query = `
       SELECT DISTINCT
-          c.id,
-          c.username,
-          u.id,
-          u.tellecaller_id AS id,
-          u.client_name,
-          u.call_schedule_date,
-          u.call_status,
-          un.ca_id,
-          un.ca_name
-      FROM  tellecaler_data c
-      LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
-      LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
+        c.id as cd,
+        c.client_name,
+        c.company_name,
+        c.call_status,
+        u.id,
+        u.username,
+        un.ca_id,
+        un.ca_name
+      FROM client_data_report c
+      LEFT JOIN tellecaler_data u ON c.tellecaller_id = u.id
+      LEFT JOIN client_ca_data un ON c.ca_id = un.ca_id
     `;
 
     db.query(query, (error, results) => {
       if (error) {
         console.error('Error executing query:', error);
         reject(error);
-        console.error('Error getting data by ID:', error); // Log the error
       } else {
-        if (results.length === 0) {
+        const clientsData = results.map(result => ({
+          cd: result.cd,
+          client_name: result.client_name,
+          company_name: result.company_name,
+          call_status: result.call_status,
+          user: {
+            id: result.id,
+            username: result.username
+          },
+          ca: {
+            ca_id: result.ca_id,
+            ca_name: result.ca_name
+          }
+        }));
+
+        if (clientsData.length === 0) {
           resolve(null);
         } else {
-          const userWithAddress = {
-            user_id: results[0].id,
-            username: results[0].username,
-            client_data: {
-              client_name:results[0].client_name,
-              call_schedule_date:results[0].call_schedule_date,
-              call_status:results[0].call_status,
-            },
-            clientCA_data:{
-               client_id : results[0].ca_id,
-               ca_name : results[0].ca_name
-            }
-          };
-          resolve(userWithAddress);
-          console.log('data retrieved by ID successfully');
+          resolve(clientsData);
+          console.log('Data retrieved successfully');
         }
       }
     });
   });
-};
+}
+
 
 function getbyteleId(userId) {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT DISTINCT
-          c.id,
-          c.username,
-          u.id,
-          u.tellecaller_id AS id,
-          u.client_name,
-          u.call_schedule_date,
-          u.call_status,
-          un.ca_id,
-          un.ca_name
-      FROM  tellecaler_data c
-      LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
-      LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
-      WHERE u.tellecaller_id = ?;
+    SELECT DISTINCT
+    c.id as cd,
+    c.client_name,
+    c.company_name,
+    c.call_status,
+    u.id,
+    u.username,
+    un.ca_id,
+    un.ca_name
+  FROM client_data_report c
+  LEFT JOIN tellecaler_data u ON c.tellecaller_id = u.id
+  LEFT JOIN client_ca_data un ON c.ca_id = un.ca_id
+  WHERE c.tellecaller_id = ?;
     `;
 
     db.query(query, [userId], (error, results) => {
@@ -279,31 +278,32 @@ function getbyteleId(userId) {
         console.error('Error executing query:', error);
         reject(error);
       } else {
-        if (results.length === 0) {
+        const clientsData = results.map(result => ({
+          cd: result.cd,
+          client_name: result.client_name,
+          company_name: result.company_name,
+          call_status: result.call_status,
+          user: {
+            id: result.id,
+            username: result.username
+          },
+          ca: {
+            ca_id: result.ca_id,
+            ca_name: result.ca_name
+          }
+        }));
+
+        if (clientsData.length === 0) {
           resolve(null);
         } else {
-          // Return an array of results for the given telecaller ID
-          const userWithAddresses = results.map(result => ({
-            user_id: result.id,
-            username: result.username,
-            client_data: {
-              client_name: result.client_name,
-              call_schedule_date: result.call_schedule_date,
-              call_status: result.call_status,
-            },
-            clientCA_data: {
-              client_id: result.ca_id,
-              ca_name: result.ca_name,
-            }
-          }));
-
-          resolve(userWithAddresses);
-          console.log('Data retrieved successfully for telecaller ID:', userId);
+          resolve(clientsData);
+          console.log('Data retrieved successfully');
         }
       }
     });
   });
 }
+
 // getalldataofclient()
 //     .then((result) => {
 //         if (result) {
@@ -339,23 +339,23 @@ async function clientdatainexcelsheet(userid) {
     WHERE u.id = ?
     ;`;
 
-  const queryPromise = new Promise((resolve, reject) => {
-    db.query(query,[userid],(error, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(results);
-      }
+    const queryPromise = new Promise((resolve, reject) => {
+      db.query(query, [userid], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
     });
-  });
 
-  const results = await queryPromise;
+    const results = await queryPromise;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('AllApplications');
 
     worksheet.columns = [
       { header: 'Client Name', key: 'client_name' },
-      { header: 'Company Name', key: 'company_name' }, 
+      { header: 'Company Name', key: 'company_name' },
       { header: 'Schedule Date', key: 'call_schedule_date' },
       { header: 'Call Status', key: 'call_status' },
       { header: 'CA Name', key: 'ca_name' },
@@ -368,12 +368,12 @@ async function clientdatainexcelsheet(userid) {
     results.forEach((row) => {
       const rowData = {
         client_name: row.client_name,
-        company_name:row.company_name,
+        company_name: row.company_name,
         call_schedule_date: row.call_schedule_date,
         call_status: row.call_status,
         ca_name: row.ca_name,
-        ca_number:row.ca_number,
-        ca_id:row.ca_id
+        ca_number: row.ca_number,
+        ca_id: row.ca_id
       };
       worksheet.addRow(rowData);
     });
@@ -412,7 +412,7 @@ async function getexcelalldata(userRole) {
     LEFT JOIN client_ca_data c ON a.ca_id = c.ca_id	
     ;`;
     const queryPromise = new Promise((resolve, reject) => {
-      db.query(query,[userRole],(error, results) => {
+      db.query(query, [userRole], (error, results) => {
         if (error) {
           reject(error);
         } else {
@@ -420,53 +420,53 @@ async function getexcelalldata(userRole) {
         }
       });
     });
-  
+
     const results = await queryPromise;
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('AllApplications');
-  
-      worksheet.columns = [
-        { header: 'Client Name', key: 'client_name' },
-        { header: 'Company Name', key: 'company_name' }, 
-        { header: 'Schedule Date', key: 'call_schedule_date' },
-        { header: 'Call Status', key: 'call_status' },
-        { header: 'CA Name', key: 'ca_name' },
-        { header: 'CA Phone Number', key: 'ca_number' },
-        { header: 'CA id Number', key: 'ca_id' },
-  
-  
-      ];
-  
-      results.forEach((row) => {
-        const rowData = {
-          client_name: row.client_name,
-          company_name:row.company_name,
-          call_schedule_date: row.call_schedule_date,
-          call_status: row.call_status,
-          ca_name: row.ca_name,
-          ca_number:row.ca_number,
-          ca_id:row.ca_id
-        };
-        worksheet.addRow(rowData);
-      });
-  
-      const excelFileName = `all_applications_${new Date().getTime()}.xlsx`;
-      const excelFilePath = path.join(excelFileDirectory, excelFileName);
-  
-      await workbook.xlsx.writeFile(excelFilePath);
-  
-      console.log(`Excel file saved as ${excelFilePath}`);
-      return excelFilePath;
-    } catch (error) {
-      console.error('Error executing or saving Excel file:', error);
-      throw error;
-    }
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('AllApplications');
+
+    worksheet.columns = [
+      { header: 'Client Name', key: 'client_name' },
+      { header: 'Company Name', key: 'company_name' },
+      { header: 'Schedule Date', key: 'call_schedule_date' },
+      { header: 'Call Status', key: 'call_status' },
+      { header: 'CA Name', key: 'ca_name' },
+      { header: 'CA Phone Number', key: 'ca_number' },
+      { header: 'CA id Number', key: 'ca_id' },
+
+
+    ];
+
+    results.forEach((row) => {
+      const rowData = {
+        client_name: row.client_name,
+        company_name: row.company_name,
+        call_schedule_date: row.call_schedule_date,
+        call_status: row.call_status,
+        ca_name: row.ca_name,
+        ca_number: row.ca_number,
+        ca_id: row.ca_id
+      };
+      worksheet.addRow(rowData);
+    });
+
+    const excelFileName = `all_applications_${new Date().getTime()}.xlsx`;
+    const excelFilePath = path.join(excelFileDirectory, excelFileName);
+
+    await workbook.xlsx.writeFile(excelFilePath);
+
+    console.log(`Excel file saved as ${excelFilePath}`);
+    return excelFilePath;
+  } catch (error) {
+    console.error('Error executing or saving Excel file:', error);
+    throw error;
   }
-  
-  
-  function getdatawithstatus(callStatus) {
-    return new Promise((resolve, reject) => {
-      const query = `
+}
+
+
+function getdatawithstatus(callStatus) {
+  return new Promise((resolve, reject) => {
+    const query = `
         SELECT DISTINCT
           c.id,
           c.username,
@@ -481,43 +481,65 @@ async function getexcelalldata(userRole) {
         LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
         WHERE u.call_status = ?
       `;
-  
-      db.query(query, [callStatus], (error, results) => {
-        if (error) {
-          console.error('Error executing query:', error);
-          reject(error);
-        } else {
-          const hotLeads = results.map(result => ({
-            telecaller_id: result.telecaller_id,
-            username: result.username,
-            client_data: {
-              client_name: result.client_name,
-              call_schedule_date: result.call_schedule_date,
-              call_status: result.call_status,
-            },
-            clientCA_data: {
-              client_id: result.ca_id,
-              ca_name: result.ca_name,
-            },
-          }));
-  
-          resolve(hotLeads);
-          console.log(' leads retrieved successfully');
-        }
-      });
-    });
-  };
 
-  
-module.exports = {
-  adminregister,
-  loginadmin,
-  telecallerregister,
-  logintellecaller,
-  deletetellecalller,
-  getalldataofclient,
-  getbyteleId,
-  clientdatainexcelsheet,
-  getexcelalldata,
-  getdatawithstatus
+    db.query(query, [callStatus], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        const hotLeads = results.map(result => ({
+          telecaller_id: result.telecaller_id,
+          username: result.username,
+          client_data: {
+            client_name: result.client_name,
+            call_schedule_date: result.call_schedule_date,
+            call_status: result.call_status,
+          },
+          clientCA_data: {
+            client_id: result.ca_id,
+            ca_name: result.ca_name,
+          },
+        }));
+
+        resolve(hotLeads);
+        console.log(' leads retrieved successfully');
+      }
+    });
+  });
 };
+
+
+function getAlltellecalller() {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT * 
+      FROM tellecaler_data WHERE is_deleted = 0
+    
+    `;
+
+    db.query(query, (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else  {
+        resolve(results)
+      };
+    })
+  })
+}
+
+
+
+module.exports = {
+      adminregister,
+      loginadmin,
+      telecallerregister,
+      logintellecaller,
+      deletetellecalller,
+      getalldataofclient,
+      getbyteleId,
+      clientdatainexcelsheet,
+      getexcelalldata,
+      getdatawithstatus,
+      getAlltellecalller
+    };

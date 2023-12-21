@@ -30,4 +30,8 @@ router.get('/getexcelsheetdata', authenticateToken, admincontroller.getexcelshhe
 
 router.get('/callstatuscheck', authenticateToken, admincontroller.getcallstatus)
 
+
+router.get('/getalltelle', authenticateToken, admincontroller.alltellecaller)
+
+
 module.exports = router;
