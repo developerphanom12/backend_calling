@@ -28,8 +28,7 @@ router.get('/getalldataclient', authenticateToken, admincontroller.getdataclient
 
 router.get('/getexcelsheetdata', authenticateToken, admincontroller.getexcelshheetdata)
 
-router.get('/callstatuscheck', authenticateToken, admincontroller.getcallstatus)
-
+router.get('/callstatuscheck/:callStatus', admincontroller.getcallstatus)
 
 router.get('/getalltelle', authenticateToken, admincontroller.alltellecaller)
 

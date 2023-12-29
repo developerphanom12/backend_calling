@@ -1,6 +1,7 @@
 const { compareSync } = require('bcrypt');
 const telecaller = require('../service/telecallerservice')
 const moment = require('moment-timezone');
+const { YourSpecificError } = require('../error/error');
 
 
 const Clientdata = async (req, res) => {
@@ -162,8 +163,64 @@ const checkadminallsales = async (req, res) => {
 
 
 
+
+const getdatatelleId = async (req, res) => {
+    try {
+      const cd = req.params.cd;
+      console.log('sdfsdfsdf', cd);
+  
+  
+      if (!cd) {
+        return res.status(400).json({
+          message: "please provide postid",
+          status: 400
+        })
+      }
+      let dataId;
+      dataId = await telecaller.getalldataByid(cd);
+  
+      if (dataId.length > 0) {
+        res.status(201).json({
+          message: "data fetched successfully",
+          status: 201,
+          data:  dataId
+    
+        });
+      } else {
+        const responseMessage = 'No datafound for the provided ID.';
+        res.status(404).json({
+          message: responseMessage,
+          status: 404
+        });
+      }
+    } catch (error) {
+      if (error instanceof YourSpecificError) {
+        return res.status(400).json({
+          status: 400,
+          error: 'An error occurred while processing your request.'
+        });
+      }
+  
+      if (error.name === 'UnauthorizedError') {
+        return res.status(401).json({
+          status: 401,
+          error: 'Unauthorized access'
+        });
+      }
+  
+      console.error('Internal Server Error:', error);
+  
+      res.status(500).json({
+        status: 500,
+        error: 'An unexpected error occurred. Please try again later.'
+      });
+    }
+  };
+
+  
 module.exports = {
     Clientdata,
     getTotalSalesPerWeekAndMonth,
-    checkadminallsales
+    checkadminallsales,
+    getdatatelleId
 }

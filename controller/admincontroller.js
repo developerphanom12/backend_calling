@@ -255,7 +255,7 @@ const getexcelshheetdata = async (req, res) => {
 };
 const getcallstatus = async (req, res) => {
   try {
-    const { callStatus } = req.body;
+    const { callStatus } = req.params;
     const validStatusValues = ['cold_lead', 'hot_lead', 'prospective_client', 'ghost_client', 'negative_client', 'close_status'];
 
     if (!validStatusValues.includes(callStatus)) {

@@ -11,4 +11,5 @@ router.post('/addclientdata',authenticateToken,upload.single('attach_file'), tel
 
  router.get('/admincheckaalsales',authenticateToken, telecallerCOntroller.checkadminallsales)
 
+ router.get('/getbyid/:cd', authenticateToken, telecallerCOntroller.getdatatelleId)
 module.exports = router;
