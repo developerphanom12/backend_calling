@@ -528,6 +528,25 @@ function getAlltellecalller() {
   })
 }
 
+const getClientDataForCurrentWeek = (currentWeekStartDate,currentWeekEndDate) => {
+  return new Promise((resolve, reject) => {
+    
+    const query = `
+      SELECT *
+      FROM client_data_report
+      WHERE call_schedule_date BETWEEN ? AND ?
+    `;
+
+    db.query(query, [currentWeekStartDate, currentWeekEndDate]  , (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
 
 
 module.exports = {
@@ -541,5 +560,6 @@ module.exports = {
       clientdatainexcelsheet,
       getexcelalldata,
       getdatawithstatus,
-      getAlltellecalller
+      getAlltellecalller,
+      getClientDataForCurrentWeek
     };

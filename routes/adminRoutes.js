@@ -23,7 +23,6 @@ router.post('/telecallerlogin', admincontroller.logintellecaller);
 router.post('/deleteuser', authenticateToken, admincontroller.userdelete)
 
 
-
 router.get('/getalldataclient', authenticateToken, admincontroller.getdataclientwithca)
 
 router.get('/getexcelsheetdata', authenticateToken, admincontroller.getexcelshheetdata)
@@ -31,6 +30,10 @@ router.get('/getexcelsheetdata', authenticateToken, admincontroller.getexcelshhe
 router.get('/callstatuscheck/:callStatus', admincontroller.getcallstatus)
 
 router.get('/getalltelle', authenticateToken, admincontroller.alltellecaller)
+
+router.get('/callcount', authenticateToken,admincontroller.getAllCallStatusCount)
+
+router.get('/getweekdata',authenticateToken, admincontroller.getUpcomingmeeting)
 
 
 module.exports = router;
