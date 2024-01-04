@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{
+      display: flex ;
+    }
+    .circle {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      margin: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+  </style>
+</head> 
+<body>
+
+  <div class="circle" id="div1" style="background-color: red;"></div>
+  <div class="circle" id="div2" style="background-color: green;"></div>
+  <div class="circle" id="div3" style="background-color: yellow;"></div>
+  <script>
+    function startTimer(divId, seconds) {
+      var div = document.getElementById(divId);
+
+      function updateTimer() {
+        var currentColor = div.style.backgroundColor;
+
+        if (currentColor === "red") {
+          div.style.backgroundColor = "green";
+        } else {
+          div.style.backgroundColor = "red";
+        } 
+         
+        setTimeout(updateTimer, seconds * 1000);
+      }
+
+      updateTimer();
+    }
+    startTimer("div1", 5);
+    startTimer("div2", 15);
+    startTimer("div3", 23);
+   
+
+  </script>
+
+</body>
+</html>

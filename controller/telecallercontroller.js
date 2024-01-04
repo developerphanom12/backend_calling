@@ -293,9 +293,108 @@ const getdatatelleId = async (req, res) => {
   }
 };
 
+
+ 
+const getUpcomingINweek = async (req, res) => {
+  try {
+    const cd = req.params.id;
+    console.log("sdfsdfsdf", cd);
+
+    if (!cd) {
+      return res.status(400).json({
+        message: "please provide postid",
+        status: 400,
+      });
+    }
+    let dataId;
+    dataId = await telecaller.getAllWeekdata(cd);
+
+    if (dataId.length > 0) {
+      res.status(201).json({
+        message: "data fetched successfully",
+        status: 201,
+        data: dataId,
+      });
+    } else {
+      const responseMessage = "No datafound for the provided ID.";
+      res.status(404).json({
+        message: responseMessage,
+        status: 404,
+      });
+    }
+  } catch (error) {
+    if (error instanceof YourSpecificError) {
+      return res.status(400).json({
+        status: 400,
+        error: "An error occurred while processing your request.",
+      });
+    }
+
+    if (error.name === "UnauthorizedError") {
+      return res.status(401).json({
+        status: 401,
+        error: "Unauthorized access",
+      });
+    }
+
+    console.error("Internal Server Error:", error);
+
+    res.status(500).json({
+      status: 500,
+      error: "An unexpected error occurred. Please try again later.",
+    });
+  }
+};
+
+
+
+const shareData = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    if (req.user.role !== "telecaller") {
+      return res.status(403).json({ error: "Forbidden for regular users" });
+    }
+
+    const { sender_id, reciever_id, share_id } = req.body;
+
+    const result = await telecaller.sharingdata(userId, reciever_id, share_id);
+
+    res.status(200).json({
+      message: result,
+      status: 200,
+    });
+  } catch (error) {
+    if (error instanceof YourSpecificError) {
+      return res.status(400).json({
+        status: 400,
+        error: "An error occurred while processing your request.",
+      });
+    }
+
+    if (error.name === "UnauthorizedError") {
+      return res.status(401).json({
+        status: 401,
+        error: "Unauthorized access",
+      });
+    }
+
+    console.error("Internal Server Error:", error);
+
+    res.status(500).json({
+      status: 500,
+      error: "An unexpected error occurred. Please try again later.",
+    });
+  }
+};
+
+
+
 module.exports = {
   Clientdata,
   getTotalSalesPerWeekAndMonth,
   checkadminallsales,
   getdatatelleId,
+  getUpcomingINweek,
+  shareData
 };

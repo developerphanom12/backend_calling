@@ -533,7 +533,7 @@ const getClientDataForCurrentWeek = (currentWeekStartDate,currentWeekEndDate) =>
     
     const query = `
       SELECT *
-      FROM client_data_report
+      FROM client_data_report 
       WHERE call_schedule_date BETWEEN ? AND ?
     `;
 
@@ -549,6 +549,61 @@ const getClientDataForCurrentWeek = (currentWeekStartDate,currentWeekEndDate) =>
 };
 
 
+
+function getsharedata(userId) {
+  return new Promise((resolve, reject) => {
+    const query = `
+    SELECT DISTINCT
+    c.id,
+    c.reciever_id,
+    c.share_id,
+    ac.id as cd,
+    ac.company_name,
+    ac.client_name,
+    ac.call_schedule_date,
+    ac.tellecaller_id,
+    ac.call_status,
+    u.id,
+    u.username
+  FROM sharing_data c
+  LEFT JOIN client_data_report ac ON c.share_id = ac.tellecaller_id
+  LEFT JOIN tellecaler_data u ON c.share_id = u.id
+  WHERE c.reciever_id = ?;
+    `;
+
+    db.query(query, [userId], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        const clientsData = results.map(result => ({
+          id: result.id,
+          reciever_id: result.reciever_id,
+          share:{
+            cd: result.cd,
+            call_status: result.call_status,
+            company_name :result.company_name,
+            client_name: result.client_name,
+            call_schedule_date : result.call_schedule_date
+          },
+          user: {
+            id: result.reciever_id,
+            username: result.username
+          },
+          
+        }));
+
+        if (clientsData.length === 0) {
+          resolve(null);
+        } else {
+          resolve(clientsData);
+          console.log('Data retrieved successfully');
+        }
+      }
+    });
+  });
+}
+
 module.exports = {
       adminregister,
       loginadmin,
@@ -561,5 +616,6 @@ module.exports = {
       getexcelalldata,
       getdatawithstatus,
       getAlltellecalller,
-      getClientDataForCurrentWeek
+      getClientDataForCurrentWeek,
+      getsharedata
     };

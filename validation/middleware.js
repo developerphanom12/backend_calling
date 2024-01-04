@@ -64,8 +64,31 @@ const validatecadata = (req, res, next) => {
 };
 ;
 
+
+
+const sharedata = Joi.object({
+  reciever_id: Joi.number().required(),
+  share_id: Joi.number().required(), 
+  
+});
+
+const validatesharedata = (req, res, next) => {
+
+  const { error } = sharedata.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+
+  next();
+};
+;
+
+
+
 module.exports = {
     validatetelecaller,
     validateclientdata,
-    validatecadata
+    validatecadata,
+    validatesharedata
 }

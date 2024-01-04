@@ -179,7 +179,7 @@ const getdataclientwithca = async (req, res) => {
         });
       }
     } else if (req.user.role === "telecaller") {
-      const clientdata = await admin.getbyteleId(userId);
+      const clientdata = await admin.getsharedata(userId);
 
       if (clientdata) {
         res.status(201).json({
@@ -440,6 +440,48 @@ const getUpcomingmeeting = async (req, res) => {
     }
   }
 };
+
+
+const getdataSHare = async (req, res) => {
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  console.log("userole", role);
+  console.log("USERID", userId);
+
+  try {
+   
+     if (req.user.role === "telecaller") {
+      const clientdata = await admin.getsharedata(userId);
+
+      if (clientdata) {
+        res.status(201).json({
+          message: "Data fetched successfully",
+          status: 201,
+          data: clientdata,
+        });
+      } else {
+        const responseMessage =
+          "No data found for the provided ID telecaller id.";
+        res.status(404).json({
+          message: responseMessage,
+          status: 404,
+        });
+      }
+    } else {
+      return res
+        .status(403)
+        .json({ status: 403, error: "Forbidden for regular users" });
+    }
+  } catch (error) {
+    console.error("Error in getdataclientwithca:", error);
+    res.status(500).json({
+      message: "Internal server error",
+      status: 500,
+    });
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -452,4 +494,5 @@ module.exports = {
   alltellecaller,
   getAllCallStatusCount,
   getUpcomingmeeting,
+  getdataSHare
 };

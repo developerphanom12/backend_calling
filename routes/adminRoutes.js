@@ -35,5 +35,8 @@ router.get('/callcount', authenticateToken,admincontroller.getAllCallStatusCount
 
 router.get('/getweekdata',authenticateToken, admincontroller.getUpcomingmeeting)
 
+router.get('/refrencedata', authenticateToken, admincontroller.getdataSHare)
+
 
 module.exports = router;
+
