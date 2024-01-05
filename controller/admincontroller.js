@@ -179,7 +179,7 @@ const getdataclientwithca = async (req, res) => {
         });
       }
     } else if (req.user.role === "telecaller") {
-      const clientdata = await admin.getsharedata(userId);
+      const clientdata = await admin.getbyteleId(userId);
 
       if (clientdata) {
         res.status(201).json({
@@ -242,6 +242,10 @@ const getexcelshheetdata = async (req, res) => {
 };
 
 const getcallstatus = async (req, res) => {
+  const UserRole = req.user.role;
+  const UserId = req.user.id;
+console.log("role and id", UserRole,UserId)
+
   try {
     const { callStatus } = req.params;
     const validStatusValues = [
@@ -253,27 +257,52 @@ const getcallstatus = async (req, res) => {
       "close_status",
     ];
 
-    if (!validStatusValues.includes(callStatus)) {
-      throw {
-        status: 400,
-        error:
-          "Invalid callStatus value. It must be one of: cold_lead, hot_lead, prospective_client, ghost_client, negative_client, close_status.",
-      };
-    }
+    if (UserRole === "admin") {
+      if (!validStatusValues.includes(callStatus)) {
+        throw {
+          status: 400,
+          error:
+            "Invalid callStatus value. It must be one of: cold_lead, hot_lead, prospective_client, ghost_client, negative_client, close_status.",
+        };
+      }
 
-    const hotLeads = await admin.getdatawithstatus(callStatus);
+      const hotLeads = await admin.getdatawithstatus(callStatus);
 
-    if (hotLeads.length === 0) {
-      res.status(404).json({
-        message: "No data found for this lead",
-        status: 404,
-      });
-    } else {
-      res.status(200).json({
-        message: "Call status leads retrieved successfully",
-        status: 200,
-        data: hotLeads,
-      });
+      if (hotLeads.length === 0) {
+        res.status(404).json({
+          message: "No data found for this lead",
+          status: 404,
+        });
+      } else {
+        res.status(200).json({
+          message: "Call status leads retrieved successfully",
+          status: 200,
+          data: hotLeads,
+        });
+      }
+    } else if (UserRole === "telecaller") {
+      if (!validStatusValues.includes(callStatus)) {
+        throw {
+          status: 400,
+          error:
+            "Invalid callStatus value. It must be one of: cold_lead, hot_lead, prospective_client, ghost_client, negative_client, close_status.",
+        };
+      }
+
+      const hotLeads = await admin.getdataWIthtelleid(callStatus,UserId);
+
+      if (hotLeads.length === 0) {
+        res.status(404).json({
+          message: "No data found for this lead",
+          status: 404,
+        });
+      } else {
+        res.status(200).json({
+          message: "Call status leads retrieved successfully",
+          status: 200,
+          data: hotLeads,
+        });
+      }
     }
   } catch (error) {
     console.error(error);
@@ -392,40 +421,71 @@ const alltellecaller = async (req, res) => {
 };
 
 const getUpcomingmeeting = async (req, res) => {
-  const role = req.user.role
-  console.log("role", role)
+  const role = req.user.role;
+  const userId = req.user.id;
+  console.log("role", role, userId);
   try {
+    if (role == "admin") {
+      const currentWeekStartDate = new Date();
 
-    if (req.user.role !== "admin") {
-      res.status(403).json({
-        status: 403,
-        error: "Forbidden. Only admin can check this no telecaller.",
-      });
-    }
-    
-    const currentWeekStartDate = new Date();
-   
-    currentWeekStartDate.setDate(
-      currentWeekStartDate.getDate() - currentWeekStartDate.getDay()
-    );
-    const currentWeekEndDate = new Date(currentWeekStartDate);
-    currentWeekEndDate.setDate(currentWeekEndDate.getDate() + 6);
-    console.log("cuurent",currentWeekStartDate, "hjdfsjfbhsdfbhsdfbvhsdfb", currentWeekEndDate)
-    const data = await admin.getClientDataForCurrentWeek(
-      currentWeekStartDate,
-      currentWeekEndDate
-    );
-    if (data.length === 0) {
-      res.status(404).json({
-        message: 'No data found for the current week',
-        status: 404,
-      });
-    } else {
-      res.status(200).json({
-        message: 'Data for the current week retrieved successfully',
-        status: 200,
-        data: data,
-      });
+      currentWeekStartDate.setDate(
+        currentWeekStartDate.getDate() - currentWeekStartDate.getDay()
+      );
+      const currentWeekEndDate = new Date(currentWeekStartDate);
+      currentWeekEndDate.setDate(currentWeekEndDate.getDate() + 6);
+      console.log(
+        "cuurent",
+        currentWeekStartDate,
+        "hjdfsjfbhsdfbhsdfbvhsdfb",
+        currentWeekEndDate
+      );
+      const data = await admin.getClientDataForCurrentWeek(
+        currentWeekStartDate,
+        currentWeekEndDate
+      );
+      if (data.length === 0) {
+        res.status(404).json({
+          message: "No data found for the current week",
+          status: 404,
+        });
+      } else {
+        res.status(200).json({
+          message: "Data for the current week retrieved successfully",
+          status: 200,
+          data: data,
+        });
+      }
+    } else if (role == "telecaller") {
+      const currentWeekStartDate = new Date();
+
+      currentWeekStartDate.setDate(
+        currentWeekStartDate.getDate() - currentWeekStartDate.getDay()
+      );
+      const currentWeekEndDate = new Date(currentWeekStartDate);
+      currentWeekEndDate.setDate(currentWeekEndDate.getDate() + 6);
+      console.log(
+        "cuurent",
+        currentWeekStartDate,
+        "hjdfsjfbhsdfbhsdfbvhsdfb",
+        currentWeekEndDate
+      );
+      const data = await admin.getclientdatabyidWeek(
+        userId,
+        currentWeekStartDate,
+        currentWeekEndDate
+      );
+      if (data.length === 0) {
+        res.status(404).json({
+          message: "No data found for the current week",
+          status: 404,
+        });
+      } else {
+        res.status(200).json({
+          message: "Data for the current week retrieved successfully",
+          status: 200,
+          data: data,
+        });
+      }
     }
   } catch (error) {
     console.error(error);
@@ -441,7 +501,6 @@ const getUpcomingmeeting = async (req, res) => {
   }
 };
 
-
 const getdataSHare = async (req, res) => {
   const userId = req.user.id;
   const role = req.user.role;
@@ -450,8 +509,7 @@ const getdataSHare = async (req, res) => {
   console.log("USERID", userId);
 
   try {
-   
-     if (req.user.role === "telecaller") {
+    if (req.user.role === "telecaller") {
       const clientdata = await admin.getsharedata(userId);
 
       if (clientdata) {
@@ -494,5 +552,5 @@ module.exports = {
   alltellecaller,
   getAllCallStatusCount,
   getUpcomingmeeting,
-  getdataSHare
+  getdataSHare,
 };

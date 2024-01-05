@@ -448,7 +448,7 @@ const checkTelleById = async (req, res) => {
     }
 
     res.status(201).json({
-      success: 201,
+      status: 201,
       data: salesData,
     });
   } catch (error) {

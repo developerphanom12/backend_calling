@@ -509,6 +509,52 @@ function getdatawithstatus(callStatus) {
 };
 
 
+
+function getdataWIthtelleid(callStatus,UserId) {
+  return new Promise((resolve, reject) => {
+    const query = `
+        SELECT DISTINCT
+          c.id,
+          c.username,
+          u.id AS telecaller_id,
+          u.client_name,
+          u.call_schedule_date,
+          u.call_status,
+          un.ca_id,
+          un.ca_name
+        FROM  tellecaler_data c
+        LEFT JOIN client_data_report u ON c.id = u.tellecaller_id
+        LEFT JOIN client_ca_data un ON u.ca_id = un.ca_id
+        WHERE u.call_status = ? AND u.teLlecaller_id = ?
+      `;
+
+    db.query(query, [callStatus,UserId], (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        const hotLeads = results.map(result => ({
+          telecaller_id: result.telecaller_id,
+          username: result.username,
+          client_data: {
+            client_name: result.client_name,
+            call_schedule_date: result.call_schedule_date,
+            call_status: result.call_status,
+          },
+          clientCA_data: {
+            client_id: result.ca_id,
+            ca_name: result.ca_name,
+          },
+        }));
+
+        resolve(hotLeads);
+        console.log(' leads retrieved successfully');
+      }
+    });
+  });
+};
+
+
 function getAlltellecalller() {
   return new Promise((resolve, reject) => {
     const query = `
@@ -554,7 +600,7 @@ function getsharedata(userId) {
   return new Promise((resolve, reject) => {
     const query = `
     SELECT DISTINCT
-    c.id,
+    c.id as cd,
     c.reciever_id,
     c.share_id,
     ac.id as cd,
@@ -577,7 +623,7 @@ function getsharedata(userId) {
         reject(error);
       } else {
         const clientsData = results.map(result => ({
-          id: result.id,
+          cd: result.cd,
           reciever_id: result.reciever_id,
           share:{
             cd: result.cd,
@@ -604,6 +650,26 @@ function getsharedata(userId) {
   });
 }
 
+
+const getclientdatabyidWeek = (currentWeekStartDate,currentWeekEndDate,userId)  => {
+  return new Promise((resolve, reject) => {
+    
+    const query = `
+      SELECT *
+      FROM client_data_report 
+      WHERE tellecaller_id = ? AND call_schedule_date BETWEEN ? AND ?
+    `;
+
+    db.query(query, [currentWeekStartDate, currentWeekEndDate,userId]  , (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
 module.exports = {
       adminregister,
       loginadmin,
@@ -617,5 +683,7 @@ module.exports = {
       getdatawithstatus,
       getAlltellecalller,
       getClientDataForCurrentWeek,
-      getsharedata
+      getsharedata,
+      getclientdatabyidWeek,
+      getdataWIthtelleid
     };
