@@ -29,6 +29,10 @@ router.get('/getweekdata',authenticateToken, admincontroller.getUpcomingmeeting)
 
 router.get('/refrencedata', authenticateToken, admincontroller.getdataSHare)
 
+router.get('/getallrecv', authenticateToken, admincontroller.getallrecievr)
+
+router.get('/getshareidmatch', authenticateToken, admincontroller.Sharedatawhereid)
+
 
 module.exports = router;
 

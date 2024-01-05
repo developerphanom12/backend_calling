@@ -574,6 +574,27 @@ function getAlltellecalller() {
   })
 }
 
+
+
+
+function getallshareidmatch() {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT * 
+      FROM  client_data_report WHERE is_deleted = 0
+    
+    `;
+
+    db.query(query, (error, results) => {
+      if (error) {
+        console.error('Error executing query:', error);
+        reject(error);
+      } else  {
+        resolve(results)
+      };
+    })
+  })
+}
 const getClientDataForCurrentWeek = (currentWeekStartDate,currentWeekEndDate) => {
   return new Promise((resolve, reject) => {
     
@@ -670,6 +691,44 @@ const getclientdatabyidWeek = (currentWeekStartDate,currentWeekEndDate,userId)  
     });
   });
 };
+
+
+
+
+
+function getallshareidmatchids() {
+  return new Promise((resolve, reject) => {
+    const query = `
+        SELECT DISTINCT
+            au.id AS cds,
+            au.username,
+            c.tellecaller_id,
+            c.client_name
+            FROM client_data_report c
+        LEFT JOIN tellecaler_data au ON c.tellecaller_id = au.id
+       `;
+
+    db.query(query,(error, results) => {
+      if (error) {
+        console.error("Error executing query:", error);
+        reject(error);
+      } else {
+        const data = results.map((row) => ({
+          cds: row.cds,
+          username: row.username,
+          TELLE: {
+          client_name : row.client_name,
+          tellecaller_id: row.tellecaller_id        
+          }
+        }));
+
+        resolve(data);
+
+        console.log("All data retrieved successfully");
+      }
+    });
+  });
+}
 module.exports = {
       adminregister,
       loginadmin,
@@ -685,5 +744,7 @@ module.exports = {
       getClientDataForCurrentWeek,
       getsharedata,
       getclientdatabyidWeek,
-      getdataWIthtelleid
+      getdataWIthtelleid,
+      getallshareidmatch,
+      getallshareidmatchids
     };

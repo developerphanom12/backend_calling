@@ -351,7 +351,7 @@ const shareData = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    if (req.user.role !== "telecaller") {
+    if (req.user.role !== "admin") {
       return res.status(403).json({ error: "Forbidden for regular users" });
     }
 
