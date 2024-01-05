@@ -241,7 +241,6 @@ const checkadminallsales = async (req, res) => {
         });
       }
     };
-    
 const getdatatelleId = async (req, res) => {
   try {
     const cd = req.params.cd;

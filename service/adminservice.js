@@ -167,11 +167,11 @@ function logintellecaller(username, passsword, callback) {
 }
 
 
-const deletetellecalller = (is_deleted, userId, callback) => {
+const deletetellecalller = (is_deleted, id, callback) => {
   const selectQuery = 'SELECT email FROM tellecaler_data WHERE id = ?';
   const updateQuery = 'UPDATE tellecaler_data SET is_deleted = ? WHERE id = ?';
   try {
-    db.query(selectQuery, [userId], (selectError, results) => {
+    db.query(selectQuery, [id], (selectError, results) => {
 
       if (selectError) {
         console.error('Select error:', selectError);
@@ -185,7 +185,7 @@ const deletetellecalller = (is_deleted, userId, callback) => {
 
       const email = results[0].email;
       console.log('email', email)
-      db.query(updateQuery, [is_deleted, userId], (updateError, updateResult) => {
+      db.query(updateQuery, [is_deleted, id], (updateError, updateResult) => {
         if (updateError) {
           console.error('Error updating telecaller status:', updateError);
           return callback({ status: 500, error: 'Failed to update telecaller status.' });

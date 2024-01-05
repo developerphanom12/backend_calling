@@ -111,7 +111,7 @@ const logintellecaller = async (req, res) => {
 };
 
 const userdelete = async (req, res) => {
-  const { userId, is_deleted } = req.body;
+  const { id, is_deleted } = req.body;
 
   try {
     if (req.user.role !== "admin") {
@@ -128,7 +128,7 @@ const userdelete = async (req, res) => {
       };
     }
 
-    admin.deletetellecalller(is_deleted, userId, (error, result) => {
+    admin.deletetellecalller(is_deleted, id, (error, result) => {
       if (error) {
         console.error("Error updating telecaller status:", error);
         throw {
