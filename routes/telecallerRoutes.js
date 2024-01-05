@@ -20,5 +20,6 @@ router.post('/addclientdata',authenticateToken,upload.single('attach_file'), tel
 
  router.get('/refrencedata', authenticateToken, telecallerCOntroller.shareData)
 
+ router.get('/checksalebyId',authenticateToken, telecallerCOntroller.checkTelleById)
 
 module.exports = router;

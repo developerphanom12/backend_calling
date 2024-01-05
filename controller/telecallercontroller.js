@@ -388,7 +388,92 @@ const shareData = async (req, res) => {
   }
 };
 
+const checkTelleById = async (req, res) => {
+  const userSelection = req.query.selection;
+  const selectedMonth = req.query.month;
+  const selectedYear = req.query.year;
+  const userId = req.user.id;
 
+  if (req.user.role !== "telecaller") {
+    return res.status(403).json({ error: "Forbidden for regular users" });
+  }
+  console.log("User Role:", req.user.role);
+
+  try {
+    let salesData;
+
+    if (userSelection === "today") {
+      const today = moment().tz("YourTimeZone").format("YYYY-MM-DD");
+      console.log("dateeee", today);
+
+      salesData = await telecaller.checktelleSaleBYid(userId,today);
+
+      if (salesData.length === 0) {
+        return res
+          .status(404)
+          .json({ status: 404, error: "No sales data found for today" });
+      }
+    } else if (userSelection === "last7days") {
+      const last7DaysData = await telecaller.tellesales7days(7,userId);
+      if (last7DaysData.length === 0) {
+        return res
+          .status(404)
+          .json({
+            status: 404,
+            error: "No sales data found for the last 7 days",
+          });
+      }
+      salesData = last7DaysData;
+      console.log("salesdttatata",last7DaysData)
+    } else if (!isNaN(selectedYear)) {
+      salesData = await telecaller.telleSalesbyYear(userId,selectedYear);
+      if (salesData.length === 0) {
+        return res
+          .status(404)
+          .json({
+            status: 404,
+            error: `No sales data found for the year ${selectedYear}`,
+          });
+      }
+    } else {
+      salesData = await telecaller.admincheckbymonthallsales(selectedMonth);
+      if (salesData.length === 0) {
+        return res
+          .status(404)
+          .json({
+            status: 404,
+            error: `No sales data found for ${selectedMonth} month`,
+          });
+      }
+    }
+
+    res.status(201).json({
+      success: 201,
+      data: salesData,
+    });
+  } catch (error) {
+    if (error instanceof YourSpecificError) {
+      return res.status(400).json({
+        status: 400,
+        error: "An error occurred while processing your request.",
+      });
+    }
+
+    if (error.name === "UnauthorizedError") {
+      return res.status(401).json({
+        status: 401,
+        error: "Unauthorized access",
+      });
+    }
+
+    console.error("Internal Server Error:", error);
+
+    res.status(500).json({
+      status: 500,
+      error: "An unexpected error occurred. Please try again later.",
+    });
+  }
+};
 
 module.exports = {
   Clientdata,
@@ -396,5 +481,6 @@ module.exports = {
   checkadminallsales,
   getdatatelleId,
   getUpcomingINweek,
-  shareData
+  shareData,
+  checkTelleById
 };

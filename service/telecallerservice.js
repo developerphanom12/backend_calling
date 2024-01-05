@@ -594,9 +594,123 @@ function sharingdata(userId, reciever_id, share_id) {
     });
   });
 }
+async function checktelleSaleBYid(date, userId) {
+  return new Promise(async (resolve, reject) => {
+    const query = `
+            SELECT
+                DAY(created_at) AS day,
+                WEEK(created_at) AS week,
+                MONTH(created_at) AS month,
+                DATE(created_at) AS date,
+                COUNT(*) AS total_sales
+            FROM
+                client_data_report 
+            WHERE
+                
+                call_status = 'close_status'
+                 AND tellecaller_id = ?
+                AND DATE(created_at) = ?
+            GROUP BY  
+                day, week, month, date
+            ORDER BY
+                month, week, day, date;
+        `;
+
+    db.query(query, [date, userId], (err, result) => {
+      console.log(date, userId)
+      if (err) {
+        console.error("Error in query:", err);
+
+        if (err.code === "404") {
+          reject("Specific error occurred in the query.");
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve(result);
+        console.log(result)
+      }
+    });
+  });
+}
 
 
 
+
+async function tellesales7days(userId,n) {
+  return new Promise(async (resolve, reject) => {
+    const query = `
+            SELECT
+                DAY(created_at) AS day,
+                WEEK(created_at) AS week,
+                MONTH(created_at) AS month,
+                DATE(created_at) AS date,
+                COUNT(*) AS total_sales
+            FROM
+                client_data_report
+            WHERE
+          
+                call_status = 'close_status'
+                AND tellecaller_id = ?
+                AND created_at >= CURDATE() - INTERVAL ? DAY
+            GROUP BY
+                day, week, month, date
+            ORDER BY
+                month, week, day, date;
+        `;
+
+    const queryParams = [n,userId];
+
+    db.query(query, queryParams, (err, result) => {
+      if (err) {
+        console.error("Error in query:", err);
+
+        if (err.code === "404") {
+          reject("Specific error occurred in the query.");
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
+
+async function telleSalesbyYear(year = null, userId) {
+  return new Promise(async (resolve, reject) => {
+    let query = `
+      SELECT
+      months.month_num AS month,
+      COALESCE(COUNT(client_data_report.id), 0) AS total_sales
+    FROM (
+      SELECT 1 AS month_num UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+      UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11 UNION SELECT 12
+    ) AS months
+    LEFT JOIN client_data_report ON months.month_num = MONTH(client_data_report.created_at)
+                                 AND tellecaller_id = ?
+                                 AND call_status = 'close_status'
+                                 AND YEAR(client_data_report.created_at) = ? 
+    GROUP BY months.month_num;    
+      `;
+
+    const queryParams = [year,userId];
+console.log("sahgvsdghvsdhgsdghsdgfdsgfgfsdgfgfgfsdgffgsd", queryParams)
+    db.query(query, queryParams, (err, result) => {
+      if (err) {
+        console.error("Error in query:", err);
+
+        if (err.code === "404") {
+          reject("Specific error occurred in the query.");
+        } else {
+          reject(err);
+        }
+      } else {
+        resolve(result);
+      }
+    });
+  });
+}
 
 module.exports = {
   insertclientdata,
@@ -612,5 +726,8 @@ module.exports = {
   getalldataByid,
   adminchecksalesBYYear,
   getAllWeekdata,
-  sharingdata
+  sharingdata,
+  checktelleSaleBYid,
+  tellesales7days,
+  telleSalesbyYear
 };
