@@ -621,23 +621,23 @@ function getsharedata(userId) {
   return new Promise((resolve, reject) => {
     const query = `
     SELECT DISTINCT
-    c.id as cd,
-    c.reciever_id,
-    c.share_id,
-    ac.id as cd,
-    ac.company_name,
-    ac.client_name,
-    ac.call_schedule_date,
-    ac.tellecaller_id,
-    ac.call_status,
-    u.id,
-    u.username
-  FROM sharing_data c
-  LEFT JOIN client_data_report ac ON c.share_id = ac.tellecaller_id
-  LEFT JOIN tellecaler_data u ON c.share_id = u.id
-  WHERE c.reciever_id = ?;
-    `;
-
+      c.id as cd,
+      c.reciever_id,
+      c.share_id,
+      ac.id as cd,
+      ac.company_name,
+      ac.client_name,
+      ac.call_schedule_date,
+      ac.tellecaller_id,
+      ac.call_status,
+      u.id,
+      u.username
+    FROM sharing_data c
+    LEFT JOIN client_data_report ac ON c.share_id = ac.tellecaller_id
+    LEFT JOIN tellecaler_data u ON c.share_id = u.id
+    WHERE c.reciever_id = ? AND ac.call_status = c.call_status;
+  `;
+  
     db.query(query, [userId], (error, results) => {
       if (error) {
         console.error('Error executing query:', error);
@@ -694,21 +694,19 @@ const getclientdatabyidWeek = (currentWeekStartDate,currentWeekEndDate,userId)  
 
 
 
-
-
 function getallshareidmatchids() {
   return new Promise((resolve, reject) => {
     const query = `
-        SELECT DISTINCT
-            au.id AS cds,
-            au.username,
-            c.tellecaller_id,
-            c.client_name
-            FROM client_data_report c
-        LEFT JOIN tellecaler_data au ON c.tellecaller_id = au.id
-       `;
+      SELECT
+        au.id AS cds,
+        au.username,
+        MIN(c.client_name) AS client_name
+      FROM client_data_report c
+      LEFT JOIN tellecaler_data au ON c.tellecaller_id = au.id
+      GROUP BY au.id, au.username;
+    `;
 
-    db.query(query,(error, results) => {
+    db.query(query, (error, results) => {
       if (error) {
         console.error("Error executing query:", error);
         reject(error);
@@ -716,10 +714,7 @@ function getallshareidmatchids() {
         const data = results.map((row) => ({
           cds: row.cds,
           username: row.username,
-          TELLE: {
-          client_name : row.client_name,
-          tellecaller_id: row.tellecaller_id        
-          }
+          client_name: row.client_name,
         }));
 
         resolve(data);
@@ -729,6 +724,7 @@ function getallshareidmatchids() {
     });
   });
 }
+
 module.exports = {
       adminregister,
       loginadmin,
@@ -748,3 +744,4 @@ module.exports = {
       getallshareidmatch,
       getallshareidmatchids
     };
+

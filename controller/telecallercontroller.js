@@ -355,9 +355,9 @@ const shareData = async (req, res) => {
       return res.status(403).json({ error: "Forbidden for regular users" });
     }
 
-    const { sender_id, reciever_id, share_id } = req.body;
+    const { sender_id, reciever_id, share_id ,call_status} = req.body;
 
-    const result = await telecaller.sharingdata(userId, reciever_id, share_id);
+    const result = await telecaller.sharingdata(userId, reciever_id, share_id,call_status);
 
     res.status(200).json({
       message: result,

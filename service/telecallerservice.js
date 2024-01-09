@@ -568,13 +568,13 @@ function getAllWeekdata(cd) {
 }
 
 
-function sharingdata(userId, reciever_id, share_id) {
+function sharingdata(userId, reciever_id, share_id,call_status) {
   return new Promise((resolve, reject) => {
     const insertSql = `
-      INSERT INTO sharing_data(sender_id, reciever_id, share_id) 
-      VALUES (?, ?, ?)`;
+      INSERT INTO sharing_data(sender_id, reciever_id, share_id,call_status) 
+      VALUES (?, ?, ?,?)`;
 
-    const values = [userId, reciever_id, share_id];
+    const values = [userId, reciever_id, share_id,call_status];
 
     db.query(insertSql, values, (error, result) => {
       if (error) {

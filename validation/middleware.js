@@ -69,6 +69,7 @@ const validatecadata = (req, res, next) => {
 const sharedata = Joi.object({
   reciever_id: Joi.number().required(),
   share_id: Joi.number().required(), 
+  call_status: Joi.string().valid('hot_lead','prospective_client','ghost_client','negative_client','cold_lead')
   
 });
 

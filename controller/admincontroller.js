@@ -583,11 +583,7 @@ const getallrecievr = async (req, res) => {
 
 
 const Sharedatawhereid = async (req, res) => {
-  const userId = req.user.id;
-  const role = req.user.role;
-
-  console.log("userole", role);
-  console.log("USERID", userId);
+ 
 
   try {
     // if (req.user.role === "admin") {
